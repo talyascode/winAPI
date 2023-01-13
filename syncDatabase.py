@@ -88,8 +88,8 @@ class SyncDatabase:
         """
         acquiring all the 10 semaphores for reading and the lock for writing
         """
-        # acquire lock for writing
-        self.write = win32event.OpenMutex(win32event.win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE, False, 'MyMutex')
+        #acquire lock for writing
+        self.write = win32event.OpenMutex(win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE, False, 'MyMutex')
         r = win32event.WaitForSingleObject(self.write, 100)
         r = win32event. WaitForSingleObject(self.write, -1)
         for i in range(10):  # acquire 10 semaphores for reading
@@ -105,7 +105,7 @@ class SyncDatabase:
         win32event.ReleaseMutex(self.write)
         for i in range(10):
             # release semaphore
-            self.read.release()
+            win32event.ReleaseSemaphore(self.read, 1)
 
     def print_all(self):
         """
@@ -118,9 +118,9 @@ class SyncDatabase:
 if __name__ == '__main__':
     db = SyncDatabase(False)
     db.print_all()
-    # assert db.set_value('2', '4') == True
+    assert db.set_value('2', '4') == True
     # assert db.set_value('3', '4') == True
-    assert db.get_value('2') == None
+    assert db.get_value('2') == '4'
     # assert db.delete_value('3') == '4'
     #db.print_all()
 
