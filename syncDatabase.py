@@ -88,7 +88,7 @@ class SyncDatabase:
         """
         acquiring all the 10 semaphores for reading and the lock for writing
         """
-        #acquire lock for writing
+        # acquire lock for writing
         self.write = win32event.OpenMutex(win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE, False, 'MyMutex')
         r = win32event.WaitForSingleObject(self.write, 100)
         r = win32event. WaitForSingleObject(self.write, -1)
