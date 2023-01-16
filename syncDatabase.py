@@ -26,7 +26,7 @@ class SyncDatabase:
         self.MUTEX_NAME = "MyMutex6"
         self.read = win32event.CreateSemaphore(None, 10, 10, self.SEMAPHORE_NAME)
         self.write = win32event.CreateMutex(None, False, self.MUTEX_NAME)
-        self.max_timeout = 100
+        self.max_timeout = -1
         self.data = FileDatabase()
 
     def get_value(self, key):
