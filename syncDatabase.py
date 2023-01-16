@@ -8,7 +8,6 @@ import sys
 import threading
 import multiprocessing
 import time
-
 from fileDatabase import *
 import win32event
 import winnt
