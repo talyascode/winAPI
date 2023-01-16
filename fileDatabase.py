@@ -84,7 +84,7 @@ class FileDatabase(database.DataBase):
 
     def read(self):
         self.handle = win32file.CreateFile(FILE, win32file.GENERIC_READ, win32file.FILE_SHARE_READ, None, win32con.OPEN_ALWAYS, 0, None)
-        result, buf = win32file.ReadFile(self.handle, 4096, None)
+        result, buf = win32file.ReadFile(self.handle, 100000, None)
         self.data_dict = pickle.loads(buf)
         win32file.CloseHandle(self.handle)
 

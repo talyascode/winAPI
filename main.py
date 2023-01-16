@@ -1,26 +1,20 @@
-"""
-Author: Talya Gross
-database project
-"""
-# import
-import threading
-import multiprocessing
+import time
 from syncDatabase import SyncDatabase
-import logging
-
-# constant
-MODE = False  # True for multi processing, False for threading
+import sys
+MODE = True
 
 
-def get(key, val, db):
+def get(db, key, val):
     """
-    the function gets the value for the key and checks that it wasnt changed
+    the function gets the value for the key and checks that it wasn't changed
     :param key: the key of the dictionary
     :param val: the value of the key
     :param db: the database object
     """
     for i in range(0, 10000):
         assert val == db.get_value(key)
+        if val != db.get_value(key):
+            print("err : val " + val + ",key: "+key)
     print("get")
     db.print_all()
 
@@ -53,17 +47,12 @@ def delete(db, num):
 
 
 def main():
-    """
-    the main function, according to the current mode, the function creates a database object and checks that
-    you can read and write to the data( through the set, delete and get functions) -
-    without any errors or lack of synchronization.
-    """
-    jobs = []
-    logging.basicConfig(filename="fileDB.log", filemode="a", level=logging.DEBUG)
     sync_database = SyncDatabase(MODE)
+    print(sys.argv)
+    jobs = []
     print(sync_database.print_all())
-    for i in range(0, 1000):
-        sync_database.set_value(str(i), "c")
+    for j in range(0, 1000):
+        sync_database.set_value(str(j), "c")
     print(sync_database.set_value("color", "blue"))
     original_data = sync_database
     print(sync_database.print_all())
@@ -72,49 +61,41 @@ def main():
     # delete- deletes the value for key and returns it, if doesnt exists return none
     # set- setting the key to val returns fail or success
 
-    if not MODE:  # threading
-        for i in range(1, 6):
-            # get
-            g = threading.Thread(target=get, args=["color", "blue", sync_database])
-            g.start()
-            jobs.append(g)
+    command = sys.argv[1]
+    for j in range(1, 6):
+        # get
+        if command == 'get':
+            print("main: command get")
+            key = sys.argv[2]
+            value = sys.argv[3]
+            get(sync_database, key, value)
+        # jobs.append(g)
 
-            # set
-            s = threading.Thread(target=sett, args=[sync_database, 10000 * i])
-            s.start()
-            jobs.append(s)
+        # set
+        if command == 'set':
+            print("main: command set")
+            num = int(sys.argv[2]) * j  # from where to start setting (key : val)
+            sett(sync_database, num)
+        # jobs.append(s)
 
-            # delete
-            d = threading.Thread(target=delete, args=[sync_database, 1000 * i])
-            d.start()
-            jobs.append(d)
+        # delete
+        if command == 'delete':
+            print("main: command delete")
+            num = int(sys.argv[2]) * j  # number of (key : val) to delete
+            delete(sync_database, num)
+        # jobs.append(d)
 
-    else:  # multi processing
-        for i in range(1, 6):
-            # get
-            g = multiprocessing.Process(target=get, args=("color", "blue", sync_database))
-            g.start()
-            jobs.append(g)
+    # for job in jobs:  # join- waiting for the threads to finish
+    #   job.join()  # TODO: waitforsingleobject to wait for all processes to finish before checking he data --> test.py
 
-            # set
-            s = multiprocessing.Process(target=sett, args=(sync_database, 10000 * i))
-            s.start()
-            jobs.append(s)
-
-            # delete
-            d = multiprocessing.Process(target=delete, args=(sync_database, 1000 * i))
-            d.start()
-            jobs.append(d)
-
-    for job in jobs:  # join- waiting for the threads to finish
-        job.join()
-
+    # TODO: when to check the data?
+    # time.sleep(10000)
     if original_data == sync_database:
-        print(" the data didnt change!")
+        print(" the data didn't change!")
         print(sync_database.print_all())
     else:
         print("the data has changed... ")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
