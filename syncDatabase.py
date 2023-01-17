@@ -4,13 +4,8 @@ file database class
 """
 
 # import
-import sys
-import threading
-import multiprocessing
-import time
 from fileDatabase import *
 import win32event
-import winnt
 
 
 class SyncDatabase:
@@ -22,8 +17,8 @@ class SyncDatabase:
         # semaphore- only 10 can get, for reading
 
         # mode - True for processing, False for threading - unused
-        self.SEMAPHORE_NAME = "MySemaphore6"
-        self.MUTEX_NAME = "MyMutex6"
+        self.SEMAPHORE_NAME = "MySemaphore3"
+        self.MUTEX_NAME = "MyMutex3"
         self.read = win32event.CreateSemaphore(None, 10, 10, self.SEMAPHORE_NAME)
         self.write = win32event.CreateMutex(None, False, self.MUTEX_NAME)
         self.max_timeout = -1
@@ -36,7 +31,8 @@ class SyncDatabase:
         :return: the value for the key
         """
         # print("get value")
-        self.read = win32event.OpenSemaphore(win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE, False, self.SEMAPHORE_NAME)
+        self.read = win32event.OpenSemaphore(win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE,
+                                             False, self.SEMAPHORE_NAME)
         r = win32event.WaitForSingleObject(self.read, self.max_timeout)
         if r != win32event.WAIT_OBJECT_0:
             raise Exception("error")
@@ -79,7 +75,6 @@ class SyncDatabase:
         """
         acquiring all the 10 semaphores for reading and the lock for writing
         """
-        # print("get aquires")
         # acquire lock for writing
         self.write = win32event.OpenMutex(win32event.SYNCHRONIZE, False, self.MUTEX_NAME)
         r = win32event.WaitForSingleObject(self.write, self.max_timeout)
@@ -87,14 +82,15 @@ class SyncDatabase:
             raise Exception("error: r = " + str(r))
         else:
             for i in range(10):  # acquire 10 semaphores for reading
-                self.read = win32event.OpenSemaphore(win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE, False, self.SEMAPHORE_NAME)
+                self.read = win32event.OpenSemaphore(win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE, False,
+                                                     self.SEMAPHORE_NAME)
                 r = win32event.WaitForSingleObject(self.read, self.max_timeout)
                 if r != win32event.WAIT_OBJECT_0:
-                    raise Exception("error")
+                    raise Exception("error: r = " + str(r))
 
     def get_releases(self):
         """
-        releasing all the semaphores and the lock
+        releasing all the 10 semaphores and the lock
         """
         # release Lock
         # print("get releases")
@@ -107,8 +103,15 @@ class SyncDatabase:
         """
         acquiring the semaphore for reading and printing the dictionary
         """
-        print("print")
-        self.data.print_all()
+        self.read = win32event.OpenSemaphore(win32event.SYNCHRONIZE | win32event.EVENT_MODIFY_STATE, False,
+                                             self.SEMAPHORE_NAME)
+        r = win32event.WaitForSingleObject(self.read, self.max_timeout)
+        if r != win32event.WAIT_OBJECT_0:
+            raise Exception("error")
+        else:
+            logging.debug("reading all data")
+            self.data.print_all()
+            win32event.ReleaseSemaphore(self.read, 1)
 
 
 if __name__ == '__main__':
