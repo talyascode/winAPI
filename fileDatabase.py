@@ -10,7 +10,6 @@ import win32file
 import win32con
 import os
 
-
 FILE = "database"
 
 
@@ -20,8 +19,9 @@ class FileDatabase(database.DataBase):
             build function of the FileDatabase class
         """
         super().__init__()
-        if not os.path.exists(FILE):
-            self.create()
+        if not os.path.exists(FILE):  # if the file doesnt exist --> creates a file with an empty dictionary
+            self.write({})
+        self.handle = None
 
     def set_value(self, key, val):
         """
@@ -45,7 +45,7 @@ class FileDatabase(database.DataBase):
 
     def get_value(self, key):
         """
-        reading the dictionary file
+        reading the dictionary file and returning the value for the key
         :param key: the key of the dictionary
         :return: the value for the key
         """
@@ -74,23 +74,30 @@ class FileDatabase(database.DataBase):
         print(self.data_dict)
 
     def write(self, data):
+        """
+        creates a handle, writes to the file and closes the handle
+        :param data: the data to write to the file
+        """
         buf = pickle.dumps(data)
         self.handle = win32file.CreateFile(FILE, win32file.GENERIC_WRITE, 0, None, win32con.OPEN_ALWAYS, 0, None)
         win32file.WriteFile(self.handle, buf, None)
         win32file.CloseHandle(self.handle)
 
-    def create(self):
-        self.write({})
-
     def read(self):
-        self.handle = win32file.CreateFile(FILE, win32file.GENERIC_READ, win32file.FILE_SHARE_READ, None, win32con.OPEN_ALWAYS, 0, None)
+        """
+        creates an handle, reads the file, updates the dictionary and closes the handle
+        :return:
+        """
+        self.handle = win32file.CreateFile(FILE, win32file.GENERIC_READ, win32file.FILE_SHARE_READ, None,
+                                           win32con.OPEN_ALWAYS, 0, None)
         result, buf = win32file.ReadFile(self.handle, 100000, None)
         self.data_dict = pickle.loads(buf)
+        # if self.handle == None:
+        #    raise Exception("error: handle: ", self.handle)
         win32file.CloseHandle(self.handle)
 
 
 if __name__ == '__main__':
-
     db = FileDatabase()
     print(db.data_dict)
     assert db.set_value('2', '4') == True
@@ -98,4 +105,3 @@ if __name__ == '__main__':
     assert db.get_value('2') == '4'
     assert db.delete_value('3') == '4'
     print(db.data_dict)
-
